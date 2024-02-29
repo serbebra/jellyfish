@@ -333,16 +333,18 @@ mod tests {
 
         let conversion_timer =
             start_timer!(|| format!("ICICLE type conversion for {} field elements", len));
-        let _: Vec<_> = v.iter().map(|&f| IF::from_ark(f)).collect();
+        let f1: Vec<_> = v.iter().map(|&f| IF::from_ark(f)).collect();
         end_timer!(conversion_timer);
 
         let conversion_timer =
-            start_timer!(|| format!("My own type conversion for {} field elements", len));
-        let _: Vec<_> = v
+            start_timer!(|| format!("My type conversion for {} field elements", len));
+        let f2: Vec<_> = v
             .iter()
             .map(|&f| IF::from_bytes_le(&f.into_bigint().to_bytes_le()))
             .collect();
         end_timer!(conversion_timer);
+
+        assert_eq!(f1, f2);
 
         // ark_std::println!("{:?}", bigints[0]);
     }
