@@ -339,8 +339,8 @@ mod tests {
         let conversion_timer =
             start_timer!(|| format!("My own type conversion for {} field elements", len));
         let _: Vec<_> = v
-            .into_iter()
-            .map(|f| IF::from_bytes_le(&f.into_bigint().to_bytes_le()))
+            .iter()
+            .map(|&f| IF::from_bytes_le(&f.into_bigint().to_bytes_le()))
             .collect();
         end_timer!(conversion_timer);
 
