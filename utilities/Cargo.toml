@@ -43,3 +43,4 @@ parallel = [
     "ark-ec/parallel",
     "dep:rayon",
 ]
+print-trace = ["ark-std/print-trace"]

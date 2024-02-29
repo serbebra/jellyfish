@@ -302,7 +302,36 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
-    use ark_std::{rand::RngCore, UniformRand};
+    use ark_std::{end_timer, rand::RngCore, start_timer, UniformRand};
+
+    #[test]
+    #[ignore]
+    fn conversion_timer() {
+        conversion_timer_helper::<Fr254>();
+        conversion_timer_helper::<Fr377>();
+        conversion_timer_helper::<Fr381>();
+    }
+
+    fn conversion_timer_helper<F: PrimeField>() {
+        let mut rng = test_rng();
+        let len = 1usize << 22;
+        let v: Vec<_> = (0..len)
+            .map(|_| {
+                let mut bytes = [0u8; 32];
+                rng.fill_bytes(&mut bytes);
+                F::from_le_bytes_mod_order(&bytes)
+            })
+            .collect();
+
+        ark_std::println!("{:?}", v[0]);
+
+        let conversion_timer =
+            start_timer!(|| format!("Type conversion for {} field elements", len));
+        let bigints: Vec<_> = v.into_iter().map(|f| f.into_bigint()).collect();
+        end_timer!(conversion_timer);
+
+        ark_std::println!("{:?}", bigints[0]);
+    }
 
     #[test]
     fn test_bn254_scalar_conversion() {
