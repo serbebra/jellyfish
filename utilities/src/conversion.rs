@@ -303,16 +303,17 @@ mod tests {
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
     use ark_std::{end_timer, rand::RngCore, start_timer, UniformRand};
+    use icicle_core::traits::{ArkConvertible, FieldImpl};
 
     #[test]
     #[ignore]
     fn conversion_timer() {
-        conversion_timer_helper::<Fr254>();
-        conversion_timer_helper::<Fr377>();
-        conversion_timer_helper::<Fr381>();
+        conversion_timer_helper::<ark_bn254::Fr, icicle_bn254::curve::ScalarField>();
+        conversion_timer_helper::<ark_bls12_377::Fr, icicle_bls12_377::curve::ScalarField>();
+        conversion_timer_helper::<ark_bls12_381::Fr, icicle_bls12_381::curve::ScalarField>();
     }
 
-    fn conversion_timer_helper<F: PrimeField>() {
+    fn conversion_timer_helper<F: PrimeField, IF: FieldImpl + ArkConvertible<ArkEquivalent = F>>() {
         let mut rng = test_rng();
         let len = 1usize << 22;
         let v: Vec<_> = (0..len)
@@ -323,14 +324,27 @@ mod tests {
             })
             .collect();
 
-        ark_std::println!("{:?}", v[0]);
+        // ark_std::println!("{:?}", v[0]);
 
         let conversion_timer =
-            start_timer!(|| format!("Type conversion for {} field elements", len));
-        let bigints: Vec<_> = v.into_iter().map(|f| f.into_bigint()).collect();
+            start_timer!(|| format!("Arkworks type conversion for {} field elements", len));
+        let _: Vec<_> = v.iter().map(|&f| f.into_bigint()).collect();
         end_timer!(conversion_timer);
 
-        ark_std::println!("{:?}", bigints[0]);
+        let conversion_timer =
+            start_timer!(|| format!("ICICLE type conversion for {} field elements", len));
+        let _: Vec<_> = v.iter().map(|&f| IF::from_ark(f)).collect();
+        end_timer!(conversion_timer);
+
+        let conversion_timer =
+            start_timer!(|| format!("My own type conversion for {} field elements", len));
+        let _: Vec<_> = v
+            .into_iter()
+            .map(|f| IF::from_bytes_le(&f.into_bigint().to_bytes_le()))
+            .collect();
+        end_timer!(conversion_timer);
+
+        // ark_std::println!("{:?}", bigints[0]);
     }
 
     #[test]

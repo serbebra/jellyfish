@@ -25,6 +25,10 @@ ark-bn254 = "0.4.0"
 ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
+icicle-bls12-377 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", features = ["arkworks"] }
+icicle-bls12-381 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", features = ["arkworks"] }
+icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", features = ["arkworks"] }
+icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0" }
 
 [features]
 default = []
