@@ -309,8 +309,33 @@ mod tests {
     #[ignore]
     fn conversion_timer() {
         conversion_timer_helper::<ark_bn254::Fr, icicle_bn254::curve::ScalarField>();
-        conversion_timer_helper::<ark_bls12_377::Fr, icicle_bls12_377::curve::ScalarField>();
-        conversion_timer_helper::<ark_bls12_381::Fr, icicle_bls12_381::curve::ScalarField>();
+        // conversion_timer_helper::<ark_bls12_377::Fr, icicle_bls12_377::curve::ScalarField>();
+        // conversion_timer_helper::<ark_bls12_381::Fr, icicle_bls12_381::curve::ScalarField>();
+
+        let mut rng = test_rng();
+        let len = 1usize << 22;
+        let v: Vec<_> = (0..len)
+            .map(|_| {
+                let mut bytes = [0u8; 32];
+                rng.fill_bytes(&mut bytes);
+                ark_bn254::Fr::from_le_bytes_mod_order(&bytes)
+            })
+            .collect();
+
+        let conversion_timer =
+            start_timer!(|| format!("Hardcoded type conversion for {} bn254 field elements", len));
+        let f1: Vec<_> = v
+            .iter()
+            .map(|&f| icicle_bn254::curve::ScalarField::from(f.into_bigint().0))
+            .collect();
+        end_timer!(conversion_timer);
+
+        let f2: Vec<_> = v
+            .iter()
+            .map(|&f| icicle_bn254::curve::ScalarField::from_ark(f))
+            .collect();
+
+        assert_eq!(f1, f2);
     }
 
     fn conversion_timer_helper<F: PrimeField, IF: FieldImpl + ArkConvertible<ArkEquivalent = F>>() {
