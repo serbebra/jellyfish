@@ -29,6 +29,7 @@ icicle-bls12-377 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "
 icicle-bls12-381 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", features = ["arkworks"] }
 icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", features = ["arkworks"] }
 icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0" }
+icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0" }
 
 [features]
 default = []

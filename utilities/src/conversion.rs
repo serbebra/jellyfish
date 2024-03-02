@@ -303,7 +303,8 @@ mod tests {
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
     use ark_std::{end_timer, rand::RngCore, start_timer, UniformRand};
-    use icicle_core::traits::{ArkConvertible, FieldImpl};
+    use icicle_core::traits::{ArkConvertible, FieldImpl, MontgomeryConvertible};
+    use icicle_cuda_runtime::{error::CudaResultWrap, memory::HostOrDeviceSlice};
 
     #[test]
     #[ignore]
@@ -324,18 +325,43 @@ mod tests {
 
         let conversion_timer =
             start_timer!(|| format!("Hardcoded type conversion for {} bn254 field elements", len));
-        let f1: Vec<_> = v
+        let r1: Vec<_> = v
             .iter()
             .map(|&f| icicle_bn254::curve::ScalarField::from(f.into_bigint().0))
             .collect();
         end_timer!(conversion_timer);
 
-        let f2: Vec<_> = v
+        let r2: Vec<_> = v
             .iter()
             .map(|&f| icicle_bn254::curve::ScalarField::from_ark(f))
             .collect();
 
-        assert_eq!(f1, f2);
+        let mut slice =
+            HostOrDeviceSlice::<'_, icicle_bn254::curve::ScalarField>::cuda_malloc(len).unwrap();
+        let conversion_timer =
+            start_timer!(|| format!("Arkworks type conversion for {} field elements", len));
+        let cast_timer = start_timer!(|| "Direct cast to icicle field");
+        let force_converted_v = v
+            .into_iter()
+            .map(|f| icicle_bn254::curve::ScalarField::from(f.0 .0))
+            .collect::<Vec<_>>();
+        end_timer!(cast_timer);
+        let to_gpu_timer = start_timer!(|| "Copy content to GPU");
+        slice.copy_from_host(&force_converted_v).unwrap();
+        end_timer!(to_gpu_timer);
+        let montgomery_timer = start_timer!(|| "Montgomery transform");
+        icicle_bn254::curve::ScalarField::from_mont(&mut slice)
+            .wrap()
+            .unwrap();
+        end_timer!(montgomery_timer);
+        let mut r3 = vec![icicle_bn254::curve::ScalarField::zero(); len];
+        let from_gpu_timer = start_timer!(|| "Copy content from GPU");
+        slice.copy_to_host(&mut r3).unwrap();
+        end_timer!(from_gpu_timer);
+        end_timer!(conversion_timer);
+
+        assert_eq!(r1, r2);
+        assert_eq!(r1, r3);
     }
 
     fn conversion_timer_helper<F: PrimeField, IF: FieldImpl + ArkConvertible<ArkEquivalent = F>>() {
