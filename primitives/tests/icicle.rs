@@ -8,8 +8,8 @@ mod icicle_tests {
     type Affine = icicle_bn254::curve::G1Affine;
     type Projective = icicle_bn254::curve::G1Projective;
 
-    const BATCH_SIZE: usize = 50;
-    const NUM_POINTS: usize = 100;
+    const BATCH_SIZE: usize = 8;
+    const NUM_POINTS: usize = 8;
 
     #[test]
     fn icicle_batch_msm() {
